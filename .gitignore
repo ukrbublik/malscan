@@ -1,0 +1,10 @@
+.idea
+coverage
+npm-debug.log
+build
+node_modules
+
+data/db-scheme-old*
+
+heroku-update-mal-api-servers.sh
+
