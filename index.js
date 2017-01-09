@@ -7,7 +7,6 @@
 const fs = require('fs');
 const MalTaskQueue = require('./lib/mal/MalTaskQueue');
 const MalScanner = require('./lib/mal/MalScanner');
-const args = process.argv.slice(2);
 const ProgressBar = require('progress');
 const express = require('express');
 const http = require('http');
@@ -25,18 +24,31 @@ tq.init(config).then(() => {
   //tq.addTasksToQueue(MalScanner.grabNewsTasksKeys);
   //tq.addTasksToQueue(MalScanner.grabUpdatesTasksKeys);
 
-  /*
+  
+/*
   //to test proxy
   for (let id in tq.allScanners) {
     let sc = tq.allScanners[id];
-    sc.provider.loadXml("https://myanimelist.net/malappinfo.php?u=DreASU&status=all&type=anime")
-    .then((body) => {
-      console.log(sc.id, 'ok');
-    }).catch((err) => {
-      console.log(sc.id, 'err');
-    });
+    if (sc.provider.options.type == "webProxy") {
+      sc.provider.loadXml("https://myanimelist.net/malappinfo.php?u=DreASU&status=all&type=anime")
+      .then((body) => {
+        console.log(sc.id, 'xml ok');
+      }).catch((err) => {
+        console.log(sc.id, 'xml err', err);
+      });
+      sc.provider.loadHtml("https://myanimelist.net/anime/128/some_title")
+      .then(($) => {
+        if ($('a[href*="/anime/genre/1/Action"]').length > 0)
+          console.log(sc.id, 'html ok');
+        else
+          console.log(sc.id, 'html bad $');
+      }).catch((err) => {
+        console.log(sc.id, 'html err', err);
+      });
+    }
   }
-  */
+*/
+
 
 });
 

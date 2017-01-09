@@ -4,19 +4,20 @@ var isTest = (process.env.isTest == '1');
 
 var webProxies = {
   Glype: {
-    'http://www.secretproxy.org': {speed: 5, stable: 1}, 
-    'http://www.spysurfing.com': {speed: 5, stable: 1}, 
+    //'http://www.secretproxy.org': {speed: 5, stable: 0}, //not stable
+    /* bad:
+    'http://www.spysurfing.com': {speed: 5, stable: 1},  
     'https://proxyweb.me': {speed: 4, stable: 1}, 
     'https://web-proxy.ro': {speed: 4, stable: 1}, 
-    'http://proxprox.com': {speed: 4, stable: 1},
-    'https://zproxy.de': {speed: 1, stable: 1},
+    'http://proxprox.com': {speed: 4, stable: 1}, 
+    'https://zproxy.de': {speed: 1, stable: 1}, 
     'https://www.magiccloak.net': {speed: 4},
-    'https://0xproxy.com': {speed: 5},
-    'http://www.unblock-pakistan.com': {speed: 4}, 
+    'https://0xproxy.com': {speed: 5}, //xml err
+    'http://www.unblock-pakistan.com': {speed: 4},
     'https://www.proxy62.com': {speed: 4},
     'http://unblockwebsites.us': {speed: 5},
     'http://proxyguru.info': {speed: 4},
-    'http://xtcsoul.net': {speed: 5},
+    'http://xtcsoul.net': {speed: 5}, 
     'https://www.proxytime.net': {speed: 3},
     'http://7proxysites.com': {speed: 3},
     'https://www.unblocks.net': {speed: 2},
@@ -25,19 +26,22 @@ var webProxies = {
     'https://www.hidemenow.net': {speed: 2},
     'https://www.kproxy.asia': {speed: 1},
     'http://www.proxygogo.info': {speed: 1},
+    */
   },
   PHProxy: {
-    'http://list-proxy.com': {speed: 5, stable: 1},
     'http://www.proproxy.me': {speed: 5},
     'http://ncprox.com': {speed: 3, stable: 1},
-    'http://skinftw.com': {speed: 5},
     'http://hidefromyou.com': {speed: 5},
+    /* bad:
+    'http://list-proxy.com': {speed: 5},
+    'http://skinftw.com': {speed: 5},
+    */
   }
 };
 
 //----------------------------------------
 
-var proxises = {
+var proxies = {
 };
 
 //----------------------------------------
@@ -108,14 +112,14 @@ var config = {
   },
   taskQueue: {
     retryTaskTimeout: 1000*10, //10s
-    badProviderCooldownTime: 1000*60, //60s
+    badProviderCooldownTime: 1000*30, //30s
     badResultsToMarkAsDead: 5,
   },
 };
 
 //----------------------------------------
 
-if (!isTest) {
+if (!isTest && 1) {
   for (let i = 101 ; i <= 120 ; i++) {
     let k = 'hk'+i;
     config.providers[k] = {
@@ -127,14 +131,14 @@ if (!isTest) {
 }
 
 var queueSizesForProxySpeeds = {
-  5: [2, 10],
-  4: [2, 10],
-  3: [2, 10],
+  5: [4, 10],
+  4: [4, 10],
+  3: [3, 10],
   2: [2, 10],
   1: [2, 10],
 };
 
-if (!isTest) {
+if (!isTest && 1) {
   for (let webProxyType in webProxies) {
     for (let addr in webProxies[webProxyType]) {
       let opts = webProxies[webProxyType][addr];
@@ -153,9 +157,9 @@ if (!isTest) {
   }
 }
 
-if (!isTest) {
-  for (let addr in proxises) {
-    let opts = proxises[addr];
+if (!isTest && 1) {
+  for (let addr in proxies) {
+    let opts = proxies[addr];
     if (opts.speed == 0)
       continue;
     let k = /^(https?:\/\/)?([\d\w\.-]+)/.exec(addr)[2].replace(/[.\-\:]/g, '_');
