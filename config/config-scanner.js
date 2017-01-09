@@ -99,16 +99,7 @@ var config = {
     saveProcessingIdsAfterEvery: (isTest ? 10 : 50),
   },
   tasks: {
-    AllUserLogins: {
-      queueSizeConcurrent: 60,
-      parserQueueSizeConcurrent: 40,
-      //maxHerokuInstances: 3, // 60 (max speed for heroku) / 20 (speed per 1 inst)
-    },
-    NewUserLists: {
-      queueSizeConcurrent: 20,
-      parserQueueSizeConcurrent: 3,
-      //maxHerokuInstances: 50, // 60 / 1.58
-    },
+    //see below
   },
   taskQueue: {
     retryTaskTimeout: 1000*10, //10s
@@ -116,6 +107,24 @@ var config = {
     badResultsToMarkAsDead: 5,
   },
 };
+
+let quickTasks = ['UserLogins_New'];
+for (let taskName of quickTasks) {
+  config.tasks[taskName] = {
+    queueSizeConcurrent: 60,
+    parserQueueSizeConcurrent: 40,
+    //maxHerokuInstances: 3, // 60 (max speed for heroku) / 20 (speed per 1 inst)
+  };
+}
+
+let slowTasks1 = ['UserLists_New'];
+for (let taskName of slowTasks1) {
+  config.tasks[taskName] = {
+    queueSizeConcurrent: 20,
+    parserQueueSizeConcurrent: 3,
+    //maxHerokuInstances: 50, // 60 / 1.58
+  };
+}
 
 //----------------------------------------
 
