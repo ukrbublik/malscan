@@ -18,7 +18,7 @@ const config = require('./config/config-scanner');
 
 var tq = new MalTaskQueue();
 tq.init(config).then(() => {
-  //tq.runTaskQueueLoop();
+  tq.runTaskQueueLoop();
 
   //todo - add tasks to queue by timer or manually from redis
   //tq.addTasksToQueue(MalScanner.grabNewsTasksKeys);
