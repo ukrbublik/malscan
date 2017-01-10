@@ -18,7 +18,7 @@ const config = require('./config/config-scanner');
 
 var tq = new MalTaskQueue();
 tq.init(config).then(() => {
-  tq.runTaskQueueLoop();
+  //tq.runTaskQueueLoop();
 
   //todo - add tasks to queue by timer or manually from redis
   //tq.addTasksToQueue(MalScanner.grabNewsTasksKeys);
@@ -30,8 +30,14 @@ tq.init(config).then(() => {
   for (let id in tq.allScanners) {
     let sc = tq.allScanners[id];
     if (sc.provider.options.type == "webProxy") {
+      sc.provider.loadRss("https://myanimelist.net/rss.php?type=rw&u=SesshouNoKon")
+      .then((res) => {
+        console.log(sc.id, 'rss ok');
+      }).catch((err) => {
+        console.log(sc.id, 'rss err', err);
+      });
       sc.provider.loadXml("https://myanimelist.net/malappinfo.php?u=DreASU&status=all&type=anime")
-      .then((body) => {
+      .then((res) => {
         console.log(sc.id, 'xml ok');
       }).catch((err) => {
         console.log(sc.id, 'xml err', err);
