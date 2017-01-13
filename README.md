@@ -44,19 +44,10 @@ List of tasks to check udpates:
 - `UserProfiles_All` - just to update favs, run it very rarely!
 - `Animes_All` - just to check possible updates of genres, relations, run it very rarely!
 
-Special tasks to fix possible problems with logins swaps:
+Special tasks to fix possible problems with logins swaps, will be added automatically:
 
 - `SpUserLogins_Re`
 - `UserProfiles_Re`
 
-Should be added after scanning any user data:
-
-- UserLogins_New
-- UserLists_*
-- UserProfiles_*
-- UserListsUpdated_*
-
 #Todo
 Adding tasks from timer
-
-Autoadd `SpUserLogins_Re` and `UserProfiles_Re`
