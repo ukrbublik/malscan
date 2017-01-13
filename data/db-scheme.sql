@@ -289,22 +289,38 @@ ALTER FUNCTION public.malrec_drop_ratings_rand() OWNER TO postgres;
 CREATE FUNCTION malrec_fix_for_train(_use_all_for_train boolean) RETURNS integer
     LANGUAGE plpgsql
     AS $$BEGIN
-	-- mark modified U/I as used for train
 	if _use_all_for_train = true then
+		-- mark all U/I as unmodified and used for train
 		update malrec_items
-		 set is_used_for_train = true, are_ratings_modified = false;
+		 set is_used_for_train = true
+		 where is_used_for_train = false;
 		update malrec_users
-		 set is_used_for_train = true, are_ratings_modified = false;
-	else 
+		 set is_used_for_train = true
+		 where is_used_for_train = false;
+
+		update malrec_items
+		 set are_ratings_modified = false
+		 where are_ratings_modified = true;
+		update malrec_users
+		 set are_ratings_modified = false
+		 where are_ratings_modified = true;
+	else
+		-- mark modified U/I as used for train
+		update malrec_items
+		 set is_used_for_train = false
+		 where is_used_for_train = true;
+		update malrec_users
+		 set is_used_for_train = false
+		 where is_used_for_train = true;
+
 		update malrec_items
 		 set is_used_for_train = true, are_ratings_modified = false
 		 where are_ratings_modified = true;
-		
 		update malrec_users
 		 set is_used_for_train = true, are_ratings_modified = false
 		 where are_ratings_modified = true;
 	end if;
-
+	
 	-- apply changes to ratings
 	update malrec_ratings
 	 set rating = new_rating, new_rating = null
@@ -690,10 +706,10 @@ $$;
 ALTER FUNCTION public.malrec_split_more_to_sets(_train_pct integer, _validate_pct integer, _test_pct integer) OWNER TO postgres;
 
 --
--- Name: malrec_unfix_for_train(); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: malrec_unfix_for_train(boolean); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION malrec_unfix_for_train() RETURNS void
+CREATE FUNCTION malrec_unfix_for_train(_use_all_for_train boolean) RETURNS void
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -709,20 +725,21 @@ BEGIN
 	delete from malrec_ratings
 	where rating = 0;
 
-
-	-- unmark just trained U/I as used for train
-	update malrec_items
-	set is_used_for_train = false
-	where is_used_for_train = true;
-	
-	update malrec_users
-	set is_used_for_train = false
-	where is_used_for_train = true;
+	if _use_all_for_train = false then
+		-- unmark just trained U/I as used for train
+		update malrec_items
+		set is_used_for_train = false
+		where is_used_for_train = true;
+		
+		update malrec_users
+		set is_used_for_train = false
+		where is_used_for_train = true;
+	end if;
 END;
 $$;
 
 
-ALTER FUNCTION public.malrec_unfix_for_train() OWNER TO postgres;
+ALTER FUNCTION public.malrec_unfix_for_train(_use_all_for_train boolean) OWNER TO postgres;
 
 --
 -- Name: malrec_upd_stats(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -779,23 +796,28 @@ DECLARE _old_most_rated_items integer[];
 DECLARE _new_most_rated_items integer[];
 BEGIN
 
-  select coalesce(fav_items, array[]::int[]) as fav_items, array(
+  select coalesce(ue.fav_items, array[]::int[]) as fav_items, array(
     select item_id
     from malrec_ratings
     where user_list_id = u.list_id and rating >= _max_rating * 0.9
-  ), coalesce(most_rated_items, array[]::int[])
+  ), coalesce(ue.most_rated_items, array[]::int[])
   into _fav_items, _most_rated_items, _old_most_rated_items
   from malrec_users as u
-  where id = _user_id;
+  left join malrec_users_extra as ue
+    on ue.id = u.id
+  where u.id = _user_id;
 
   -- _new_most_rated_items := _fav_items | _most_rated_items;
   _new_most_rated_items := sort(_most_rated_items);
 
   -- tip: can simply compare with '=' because elements are sorted
   if _old_most_rated_items != _new_most_rated_items then
+   update malrec_users_extra
+    set most_rated_items = _new_most_rated_items
+    where id = _user_id;
    update malrec_users
-   set most_rated_items = _new_most_rated_items, most_rated_items_update_ts = now()
-   where id = _user_id;
+    set most_rated_items_update_ts = now()
+    where id = _user_id;
   end if;
 
 END;
@@ -826,7 +848,7 @@ ALTER TABLE malrec_genres OWNER TO postgres;
 
 CREATE TABLE malrec_items (
     id integer NOT NULL,
-    name character varying(1000),
+    name character(100),
     ratings_count integer DEFAULT 0,
     avg_rating double precision DEFAULT 0,
     genres integer[],
@@ -904,14 +926,11 @@ ALTER TABLE malrec_ratings OWNER TO postgres;
 
 CREATE TABLE malrec_users (
     id integer NOT NULL,
-    login character varying(255),
+    login character(50),
     list_id integer,
     ratings_count integer DEFAULT 0,
     avg_rating double precision DEFAULT 0,
-    unrated_items integer[],
     list_update_ts timestamp without time zone,
-    fav_items integer[],
-    most_rated_items integer[],
     most_rated_items_update_ts timestamp without time zone,
     reg_date date,
     gender malrec_gender,
@@ -920,10 +939,25 @@ CREATE TABLE malrec_users (
     list_check_ts timestamp without time zone,
     need_to_check_list boolean DEFAULT false NOT NULL,
     is_deleted boolean DEFAULT false NOT NULL
-);
+)
+WITH (fillfactor='50');
 
 
 ALTER TABLE malrec_users OWNER TO postgres;
+
+--
+-- Name: malrec_users_extra; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE malrec_users_extra (
+    id integer NOT NULL,
+    unrated_items integer[],
+    fav_items integer[],
+    most_rated_items integer[]
+);
+
+
+ALTER TABLE malrec_users_extra OWNER TO postgres;
 
 --
 -- Name: malrec_users_list_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -985,6 +1019,14 @@ ALTER TABLE ONLY malrec_ratings
 
 ALTER TABLE ONLY malrec_ratings
     ADD CONSTRAINT malrec_ratings_user_list_id_item_id_key PRIMARY KEY (user_list_id, item_id);
+
+
+--
+-- Name: malrec_users_extra_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY malrec_users_extra
+    ADD CONSTRAINT malrec_users_extra_pkey PRIMARY KEY (id);
 
 
 --
@@ -1081,6 +1123,14 @@ ALTER TABLE ONLY malrec_ratings
 
 ALTER TABLE ONLY malrec_ratings
     ADD CONSTRAINT malrec_ratings_user_list_id_fkey FOREIGN KEY (user_list_id) REFERENCES malrec_users(list_id);
+
+
+--
+-- Name: malrec_users_extra_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY malrec_users_extra
+    ADD CONSTRAINT malrec_users_extra_id_fkey FOREIGN KEY (id) REFERENCES malrec_users(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1207,14 +1257,14 @@ GRANT ALL ON FUNCTION malrec_split_more_to_sets(_train_pct integer, _validate_pc
 
 
 --
--- Name: malrec_unfix_for_train(); Type: ACL; Schema: public; Owner: postgres
+-- Name: malrec_unfix_for_train(boolean); Type: ACL; Schema: public; Owner: postgres
 --
 
-REVOKE ALL ON FUNCTION malrec_unfix_for_train() FROM PUBLIC;
-REVOKE ALL ON FUNCTION malrec_unfix_for_train() FROM postgres;
-GRANT ALL ON FUNCTION malrec_unfix_for_train() TO postgres;
-GRANT ALL ON FUNCTION malrec_unfix_for_train() TO PUBLIC;
-GRANT ALL ON FUNCTION malrec_unfix_for_train() TO ukrbublik;
+REVOKE ALL ON FUNCTION malrec_unfix_for_train(_use_all_for_train boolean) FROM PUBLIC;
+REVOKE ALL ON FUNCTION malrec_unfix_for_train(_use_all_for_train boolean) FROM postgres;
+GRANT ALL ON FUNCTION malrec_unfix_for_train(_use_all_for_train boolean) TO postgres;
+GRANT ALL ON FUNCTION malrec_unfix_for_train(_use_all_for_train boolean) TO PUBLIC;
+GRANT ALL ON FUNCTION malrec_unfix_for_train(_use_all_for_train boolean) TO ukrbublik;
 
 
 --
@@ -1320,6 +1370,16 @@ GRANT ALL ON TABLE malrec_users TO postgres;
 GRANT ALL ON TABLE malrec_users TO root;
 GRANT ALL ON TABLE malrec_users TO ukrbublik;
 GRANT ALL ON TABLE malrec_users TO PUBLIC;
+
+
+--
+-- Name: malrec_users_extra; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE malrec_users_extra FROM PUBLIC;
+REVOKE ALL ON TABLE malrec_users_extra FROM postgres;
+GRANT ALL ON TABLE malrec_users_extra TO postgres;
+GRANT ALL ON TABLE malrec_users_extra TO root;
 
 
 --
