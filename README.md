@@ -28,7 +28,7 @@ See progress at cmd logs
 List of tasks to grab only new data:
 
 - `GenresOnce` - grab genres, once
-- `NewAnimes` - grab animes
+- `Animes_New` - grab new animes
 - `AnimesUserrecs_New` - grab users' anime-to-anime recommendations
 - `UserLogins_New` - grab user id <-> login pairs
 - `UserLists_New` - grab user lists, only for users with never checked yet list
@@ -42,6 +42,7 @@ List of tasks to check udpates:
 - `UserLists_Updated` - grab updated user lists, after `UserListsUpdated_*`
 - `AnimesUserrecs_All` - regrab users' anime-to-anime recommendations, run it rarely, like once in week..
 - `UserProfiles_All` - just to update favs, run it very rarely!
+- `Animes_All` - just to check possible updates of genres, relations, run it very rarely!
 
 Special tasks to fix possible problems with logins swaps:
 
