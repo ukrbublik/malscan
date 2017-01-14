@@ -11,10 +11,10 @@ For speed-up scans in parallel:
 
 Safe parallelization is implemented with help of redis transactions (see class `MalBaseScanner`).
 
-Scanned data is saved to PostgreSQL db (see `data/db-scheme.sql`, class `MalDataProcesser`).
+Scanned data is saved to PostgreSQL db (see `data/db-schema.sql`, class `MalDataProcesser`).
 
 # Using
-Install PostgreSQL db scheme `data/db-scheme.sql`
+Install PostgreSQL db schema `data/db-schema.sql`
 
 Set options in `config/config-scanner.js`
 
