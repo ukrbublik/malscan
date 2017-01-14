@@ -1,6 +1,6 @@
-# About
-MyAnimeList scanner
+# MyAnimeList scanner #
 
+### About
 Scans MAL site for data need for recommedation engine "You Can (Not) Recomend".
 
 For speed-up scans in parallel:
@@ -13,7 +13,7 @@ Safe parallelization is implemented with help of redis transactions (see class `
 
 Scanned data is saved to PostgreSQL db (see `data/db-schema.sql`, class `MalDataProcesser`).
 
-# Using
+### Using
 Install PostgreSQL db schema `data/db-schema.sql`
 
 Set options in `config/config-scanner.js`
@@ -24,7 +24,7 @@ Add manually tasks to redis: `rpush mal.queuedTasks <task>`
 
 See progress at cmd logs
 
-#Tasks
+### Tasks
 List of tasks to grab only new data:
 
 - `GenresOnce` - grab genres, once
@@ -49,5 +49,5 @@ Special tasks to fix possible problems with logins swaps, will be added automati
 - `SpUserLogins_Re`
 - `UserProfiles_Re`
 
-#Todo
+### Todo
 Adding tasks from timer
