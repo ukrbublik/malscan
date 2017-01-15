@@ -7,4 +7,5 @@ node_modules
 data/db-scheme-old*
 
 heroku-update-mal-api-servers.sh
+config/config-my.js
 
