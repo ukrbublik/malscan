@@ -1,7 +1,7 @@
 # MyAnimeList scanner #
 
 ### About
-Scans MAL site for data need for recommedation engine "You Can (Not) Recomend".
+Scans MAL site for data need for recommeder system [You Can (Not) Recomend](https://github.com/ukrbublik/You-Can-Not-Recommend).
 
 For speed-up scans in parallel:
 
