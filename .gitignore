@@ -7,6 +7,5 @@ package-lock.json
 
 data/db-scheme-old*
 
-heroku-update-mal-api-servers.sh
 config/config-my.js
 
